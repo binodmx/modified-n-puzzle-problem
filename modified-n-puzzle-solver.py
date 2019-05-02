@@ -1,8 +1,11 @@
-start_conf_file_name = "Sample_Start_Configuration.txt"
-goal_conf_file_name = "Sample_Goal_Configuration.txt"
+import sys
+
+# define file names
+start_conf_file_name = sys.argv[1]
+goal_conf_file_name = sys.argv[2]
 output_file_name = "Output.txt"
 
-size = 4
+# read from input files 
 start_configuration = []
 goal_configuration = []
 
@@ -18,6 +21,17 @@ for line in lines:
     goal_configuration.append(line.strip().split())
 fo.close()
 
+size = len(start_configuration)
+
+# return hamming distance (number of misplaced tiles)
+def hamming_distance(configuration):
+    total = 0
+    for row in range(size):
+        for col in range(size):
+            if goal_configuration[row][col] != configuration[row][col]:
+                total += 1
+    return total
+    
 # return manhattan distance
 def manhattan_distance(tile, r, c):
     if tile == '-':
@@ -27,13 +41,18 @@ def manhattan_distance(tile, r, c):
             if goal_configuration[row][col] == tile:
                 return abs(row - r) + abs(col - c)
 
-# heuristic value = total manhattan distance    
-def h(n):
+# return total manhattan distance
+def total_manhattan_distance(configuration):
     total_manhattan_distance = 0
     for r in range(size):
         for c in range(size):
-            total_manhattan_distance += manhattan_distance(n[r][c], r, c)
+            total_manhattan_distance += manhattan_distance(configuration[r][c], r, c)
     return total_manhattan_distance
+
+# heuristic value --> return total manhattan distance or hamming distance
+def h(n):
+    return total_manhattan_distance(n)
+    #return hamming_distance(n)
 
 class State:
     def __init__(self, configuration, parent, g):
@@ -82,7 +101,7 @@ def next_states(current_state):
         temp_conf = [x[:] for x in current_state.configuration]
         temp_conf[blank_tile1[0]][blank_tile1[1]], temp_conf[blank_tile1[0]-1][blank_tile1[1]] = temp_conf[blank_tile1[0]-1][blank_tile1[1]], temp_conf[blank_tile1[0]][blank_tile1[1]]
         states.append(State(temp_conf, current_state, current_state.g + 1))
-    if blank_tile1[0] + 1 <= 3 and current_state.configuration[blank_tile1[0]+1][blank_tile1[1]] != '-':
+    if blank_tile1[0] + 1 <= (size-1) and current_state.configuration[blank_tile1[0]+1][blank_tile1[1]] != '-':
         temp_conf = [x[:] for x in current_state.configuration]
         temp_conf[blank_tile1[0]][blank_tile1[1]], temp_conf[blank_tile1[0]+1][blank_tile1[1]] = temp_conf[blank_tile1[0]+1][blank_tile1[1]], temp_conf[blank_tile1[0]][blank_tile1[1]]
         states.append(State(temp_conf, current_state, current_state.g + 1))
@@ -90,7 +109,7 @@ def next_states(current_state):
         temp_conf = [x[:] for x in current_state.configuration]
         temp_conf[blank_tile1[0]][blank_tile1[1]], temp_conf[blank_tile1[0]][blank_tile1[1]-1] = temp_conf[blank_tile1[0]][blank_tile1[1]-1], temp_conf[blank_tile1[0]][blank_tile1[1]]
         states.append(State(temp_conf, current_state, current_state.g + 1))
-    if blank_tile1[1] + 1 <= 3 and current_state.configuration[blank_tile1[0]][blank_tile1[1]+1] != '-':
+    if blank_tile1[1] + 1 <= (size-1) and current_state.configuration[blank_tile1[0]][blank_tile1[1]+1] != '-':
         temp_conf = [x[:] for x in current_state.configuration]
         temp_conf[blank_tile1[0]][blank_tile1[1]], temp_conf[blank_tile1[0]][blank_tile1[1]+1] = temp_conf[blank_tile1[0]][blank_tile1[1]+1], temp_conf[blank_tile1[0]][blank_tile1[1]]
         states.append(State(temp_conf, current_state, current_state.g + 1))
@@ -99,7 +118,7 @@ def next_states(current_state):
         temp_conf = [x[:] for x in current_state.configuration]
         temp_conf[blank_tile2[0]][blank_tile2[1]], temp_conf[blank_tile2[0]-1][blank_tile2[1]] = temp_conf[blank_tile2[0]-1][blank_tile2[1]], temp_conf[blank_tile2[0]][blank_tile2[1]]
         states.append(State(temp_conf, current_state, current_state.g + 1))
-    if blank_tile2[0] + 1 <= 3 and current_state.configuration[blank_tile2[0]+1][blank_tile2[1]] != '-':
+    if blank_tile2[0] + 1 <= (size-1) and current_state.configuration[blank_tile2[0]+1][blank_tile2[1]] != '-':
         temp_conf = [x[:] for x in current_state.configuration]
         temp_conf[blank_tile2[0]][blank_tile2[1]], temp_conf[blank_tile2[0]+1][blank_tile2[1]] = temp_conf[blank_tile2[0]+1][blank_tile2[1]], temp_conf[blank_tile2[0]][blank_tile2[1]]
         states.append(State(temp_conf, current_state, current_state.g + 1))
@@ -107,7 +126,7 @@ def next_states(current_state):
         temp_conf = [x[:] for x in current_state.configuration]
         temp_conf[blank_tile2[0]][blank_tile2[1]], temp_conf[blank_tile2[0]][blank_tile2[1]-1] = temp_conf[blank_tile2[0]][blank_tile2[1]-1], temp_conf[blank_tile2[0]][blank_tile2[1]]
         states.append(State(temp_conf, current_state, current_state.g + 1))
-    if blank_tile2[1] + 1 <= 3 and current_state.configuration[blank_tile2[0]][blank_tile2[1]+1] != '-':
+    if blank_tile2[1] + 1 <= (size-1) and current_state.configuration[blank_tile2[0]][blank_tile2[1]+1] != '-':
         temp_conf = [x[:] for x in current_state.configuration]
         temp_conf[blank_tile2[0]][blank_tile2[1]], temp_conf[blank_tile2[0]][blank_tile2[1]+1] = temp_conf[blank_tile2[0]][blank_tile2[1]+1], temp_conf[blank_tile2[0]][blank_tile2[1]]
         states.append(State(temp_conf, current_state, current_state.g + 1))
@@ -123,11 +142,11 @@ def get_move(from_state, to_state):
                 move += from_state.configuration[row][col]+","
                 if row-1 >= 0 and from_state.configuration[row][col] == to_state.configuration[row-1][col]:
                     move += "up)"
-                if row+1 <= 3 and from_state.configuration[row][col] == to_state.configuration[row+1][col]:
+                if row+1 <= (size-1) and from_state.configuration[row][col] == to_state.configuration[row+1][col]:
                     move += "down)"
                 if col-1 >= 0 and from_state.configuration[row][col] == to_state.configuration[row][col-1]:
                     move += "left)"
-                if col+1 <= 3 and from_state.configuration[row][col] == to_state.configuration[row][col+1]:
+                if col+1 <= (size-1) and from_state.configuration[row][col] == to_state.configuration[row][col+1]:
                     move += "right)"
                 break       
     return move
@@ -174,7 +193,9 @@ def A():
                     open_state.g = next_state.g
                     open_state.parent = next_state.parent
 
+# write to output file
 fo = open(output_file_name, "w")
-fo.write(", ".join(A()))
+PATH = A()
+fo.write(", ".join(PATH))
 fo.close()
 
